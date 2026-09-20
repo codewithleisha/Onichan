@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Onion Storage Facility — Interactive Digital Twin</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+
+    <!-- Reticle & Tooltip -->
+    <div id="reticle"></div>
+    <div id="hover-tag"></div>
+
+    <!-- Entry Modal -->
+    <div id="blocker">
+        <div id="instructions">
+            <h2>INTELLIGENT ONION STORAGE FACILITY</h2>
+            <h3>Digital Twin & Environmental Control System</h3>
+            <p>Human-Scale First Person POV (1.65m Eye Height)</p>
+            <div class="controls-guide">
+                <span><strong>W, A, S, D</strong> : Move</span>
+                <span><strong>Mouse</strong> : Look around</span>
+                <span><strong>Shift</strong> : Sprint</span>
+                <span><strong>Left Click (Scene)</strong> : Inspect Item</span>
+                <span><strong>Esc</strong> : Release Mouse for UI Interaction</span>
+            </div>
+            <button id="btn-enter" class="primary-btn">ENTER STORAGE FACILITY</button>
+        </div>
+    </div>
+
+    <!-- Top Real-Time Status Bar -->
+    <header id="top-bar">
+        <div class="brand">
+            <span class="status-indicator live-pulse"></span>
+            <strong>FACILITY TWIN: ONION-STORAGE-01</strong>
+            <span id="stage-badge" class="badge cold-stage">STAGE: COLD STORAGE</span>
+        </div>
+        <div class="system-quick-stats">
+            <div>TEMP: <span id="quick-temp" class="stat-val">1.4°C</span></div>
+            <div>RH: <span id="quick-rh" class="stat-val">67.2%</span></div>
+            <div>AIRFLOW: <span id="quick-af" class="stat-val">0.34 m/s</span></div>
+            <div>CO₂: <span id="quick-co2" class="stat-val">520 ppm</span></div>
+            <div>RISK: <span id="quick-risk" class="stat-val risk-low">LOW (4.2%)</span></div>
+        </div>
+        <div class="top-actions">
+            <button id="btn-view-toggle" class="btn-action">📐 OVERVIEW / POV</button>
+            <button id="btn-light-toggle" class="btn-action">💡 INSPECTION LIGHT</button>
+            <button id="btn-door-toggle" class="btn-action">🚪 TOGGLE DOOR</button>
+        </div>
+    </header>
+
+    <!-- Telemetry Dashboard -->
+    <aside id="dashboard-panel" class="glass-panel">
+        <div class="panel-header">
+            <h4>ENVIRONMENTAL TELEMETRY</h4>
+            <span id="system-status-pill" class="pill pill-optimal">OPTIMAL</span>
+        </div>
+
+        <div class="telemetry-grid">
+            <div class="tele-item">
+                <label>Avg Temperature</label>
+                <div class="val" id="dash-temp">1.4°C</div>
+                <small class="target-label" id="target-temp-lbl">Target: 0.0 - 2.0°C</small>
+            </div>
+            <div class="tele-item">
+                <label>Relative Humidity</label>
+                <div class="val" id="dash-rh">67.0%</div>
+                <small class="target-label" id="target-rh-lbl">Target: 65.0 - 70.0%</small>
+            </div>
+            <div class="tele-item">
+                <label>Air Velocity</label>
+                <div class="val" id="dash-af">0.32 m/s</div>
+                <small class="target-label">Target: 0.20 - 0.50 m/s</small>
+            </div>
+            <div class="tele-item">
+                <label>CO₂ Concentration</label>
+                <div class="val" id="dash-co2">520 ppm</div>
+                <small class="target-label">Threshold: &lt; 1000 ppm</small>
+            </div>
+            <div class="tele-item">
+                <label>Condensation Risk</label>
+                <div class="val" id="dash-cond">NONE (0%)</div>
+                <small class="target-label">Dew Point Delta: 4.8°C</small>
+            </div>
+            <div class="tele-item">
+                <label>Est. Spoilage Risk</label>
+                <div class="val" id="dash-risk">4.2%</div>
+                <small class="target-label">Cumulative Loss Model</small>
+            </div>
+        </div>
+
+        <!-- Active Equipment -->
+        <div class="equipment-subpanel">
+            <h5>EQUIPMENT LOADS</h5>
+            <div class="actuator-row">
+                <span>Cooling Evaporator:</span>
+                <div class="progress-track">
+                    <div id="bar-cooling" class="progress-fill" style="width: 45%;"></div>
+                </div>
+                <span id="txt-cooling">45%</span>
+            </div>
+            <div class="actuator-row">
+                <span>Exhaust Fans (F01-F04):</span>
+                <div class="progress-track">
+                    <div id="bar-vent" class="progress-fill" style="width: 35%;"></div>
+                </div>
+                <span id="txt-vent">35%</span>
+            </div>
+            <div class="actuator-row">
+                <span>Dehumidification:</span>
+                <div class="progress-track">
+                    <div id="bar-dehum" class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <span id="txt-dehum">OFF</span>
+            </div>
+        </div>
+
+        <!-- AI Advisor -->
+        <div class="ai-box">
+            <div class="ai-title">🤖 AI STORAGE ASSISTANT</div>
+            <div id="ai-recommendation">System operating within target envelopes for Long-Term Cold Storage. Outer skins
+                dry; no micro-condensation risk detected.</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-row">
+            <button id="btn-mode-toggle" class="btn-toggle">MODE: AUTO</button>
+            <button id="btn-stage-toggle" class="btn-toggle">SWITCH TO CURING</button>
+        </div>
+
+        <!-- Scenarios -->
+        <div class="scenario-section">
+            <h5>SIMULATION / DEMO SCENARIOS</h5>
+            <div class="scenario-buttons">
+                <button class="btn-scenario" data-scenario="NORMAL">Normal</button>
+                <button class="btn-scenario" data-scenario="TEMP_SPIKE">Temp Spike</button>
+                <button class="btn-scenario" data-scenario="HIGH_HUMIDITY">High RH</button>
+                <button class="btn-scenario" data-scenario="CONDENSATION">Condensation</button>
+                <button class="btn-scenario" data-scenario="CO2_BUILDUP">High CO₂</button>
+                <button class="btn-scenario" data-scenario="SENSOR_FAULT">Sensor Fault</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Object Inspector Modal -->
+    <aside id="inspector-modal" class="glass-panel hidden">
+        <div class="panel-header">
+            <h4 id="inspect-title">OBJECT TELEMETRY</h4>
+            <button id="btn-close-inspect" class="close-btn">&times;</button>
+        </div>
+        <div id="inspect-content" class="inspect-details"></div>
+    </aside>
+
+    <script src="src/config.js"></script>
+    <script src="src/simulation.js"></script>
+    <script src="src/scene.js"></script>
+    <script src="src/app.js"></script>
+</body>
+
+</html>
